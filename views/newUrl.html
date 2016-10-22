@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="/css/angular-material.min.css">
+</head>
+<body ng-app="YourApp">
+ 
+
+
+<div ng-controller="AppCtrl" layout="column" ng-cloak="" class="inputdemoErrors" ng-app="MyApp">
+  <md-content layout-padding="">
+
+    <form name="newUrlForm" ng-submit="submitUrl()">
+      <md-input-container class="md-block">
+        <label>Key</label>
+        <input required="" name="key" ng-model="newUrl.new_key">
+      </md-input-container>
+      
+      <md-input-container class="md-block">
+        <label>Url to forward to</label>
+        <input required="" name="url" ng-model="newUrl.new_url">
+      </md-input-container>
+
+      <div>
+        <md-button type="submit">Submit</md-button>
+      </div>
+    </form>
+  </md-content>
+
+</div>
+ 
+    <script src="/scripts/lib/angular.min.js"></script> 
+    <script src="/scripts/lib/angular-aria.min.js"></script> 
+    <script src="/scripts/lib/angular-animate.min.js"></script> 
+    <script src="/scripts/lib/angular-material.min.js"></script> 
+    <script src="/scripts/lib/clipboard.min.js"></script> 
+    <script src="/scripts/lib/ngclipboard.min.js"></script> 
+    <script>
+ 
+        // Include app dependency on ngMaterial 
+        angular.module('YourApp',['ngMaterial', 'ngclipboard'])
+
+        .controller('AppCtrl', function($scope, $http, $mdDialog) {
+            function SuccessDialogController($scope, $mdDialog, keyUrl) {
+                $scope.keyUrl = keyUrl;
+                
+                $scope.hide = function() {
+                  $mdDialog.hide();
+                };
+
+                $scope.cancel = function() {
+                  $mdDialog.cancel();
+                };
+            };
+
+            function TakenDialogController($scope, $mdDialog, keyUrl, destUrl, desiredUrl) {
+                $scope.keyUrl = keyUrl;
+                $scope.destUrl = destUrl;
+                $scope.desiredUrl = desiredUrl;
+
+                $scope.hide = function() {
+                  $mdDialog.hide();
+                };
+
+                $scope.cancel = function() {
+                  $mdDialog.cancel();
+                };
+
+                $scope.override = function() {
+                    $mdDialog.hide(true);
+                };
+            };
+
+            $scope.submitUrl = function() {
+                if ($scope.newUrl) {
+                    $http.post('/new', $scope.newUrl).then(function successCallback(response) {
+                        console.log(response);
+                        if (response.data.error && response.data.error_code == 1) {
+                            // send confirm overwrite message
+                            console.log($scope.newUrl);
+                            showTakenMessage(response.data.keyUrl, response.data.destUrl, $scope.newUrl.new_url);
+                        } else {
+                            // send success message
+                            console.log("showing success message");
+                            showSuccessMessage(response.data.keyUrl);
+                            $scope.newUrl.writeover = false;
+                        }
+                    }, function errorCallback(response) {
+                        console.log(response);
+                        alert("failure, contact owner cause this should never display.");
+                    });
+                }
+            };
+
+            showSuccessMessage = function showSuccessMessage(keyUrl) {
+                console.log("starting the process of showing");
+                $mdDialog.show({
+                  controller: SuccessDialogController,
+                  templateUrl: '/templates/success.tmpl.html',
+                  parent: angular.element(document.body),
+                  clickOutsideToClose:true,
+                  locals : {
+                    // TODO: change this
+                    keyUrl : keyUrl
+                  }
+                });
+            }; 
+
+            showTakenMessage = function showTakenMessage(keyUrl, destUrl, desiredUrl) {
+                console.log("starting the process of showing");
+                $mdDialog.show({
+                  controller: TakenDialogController,
+                  templateUrl: '/templates/taken.tmpl.html',
+                  parent: angular.element(document.body),
+                  clickOutsideToClose:true,
+                  locals : {
+                    // TODO: change this
+                    keyUrl : keyUrl,
+                    destUrl : destUrl,
+                    desiredUrl : addHttp(desiredUrl)
+                  }
+                }).then(function(override) {
+                    // should override
+                    $scope.newUrl.writeover = true;
+                    $scope.submitUrl();
+                }, function() {});
+            }; 
+        });
+
+        function addHttp(url) {
+            if (!/^(?:f|ht)tps?\:\/\//.test(url)) {
+                url = "http://" + url;
+            }
+            return url;
+        }
+
+    </script> 
+ 
+</body>
+
+</html>

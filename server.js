@@ -2,23 +2,29 @@ var express = require('express');
 var logger = require('morgan');
 var mongodb = require('mongodb');
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/StatBot');
+var bodyParser = require('body-parser');
+var path = require('path');
+
+mongoose.connect('mongodb://localhost:27017/CustomUrl');
 
 //declare Models
 var Url = require('./models/url');
 
 //declare Routes
-var routes = require('./routes/index');
-
+var urlsRoute = require('./api/urls');
 
 var app = express();
 
-app.use(logger('common'));
+// files will show up without the /public publicly
+app.use("/", express.static("public"));
 
+app.use(logger('common'));
+app.use(bodyParser.urlencoded());
+
+app.use(bodyParser.json());
 
 //configure routes
-app.use('/', routes);
-
+app.use('/', urlsRoute);
 
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {

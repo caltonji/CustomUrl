@@ -3,7 +3,7 @@ var Schema = mongoose.Schema;
 
 var UrlSchema = new Schema({
     url: String,
-    hash: String
+    key: String
 })
 
 module.exports = mongoose.model('Url', UrlSchema);
