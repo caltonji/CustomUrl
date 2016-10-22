@@ -6,6 +6,10 @@ var path = require('path');
 //models
 var Url = mongoose.model('Url');
 
+router.get('/', function (req, res) {
+    res.redirect('/new');
+});
+
 router.get('/:key', function (req, res) {
     // get the url being sent
     var key = req.params.key;
